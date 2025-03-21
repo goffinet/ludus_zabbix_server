@@ -139,6 +139,7 @@
     line: "DBPassword={{ ludus_mysql_zabbix_password }}"
     state: present
   become: true
+  tags: never
 
 - name: Configure Zabbix PHP configuration
   ansible.legacy.template:

@@ -11,10 +11,6 @@ name: Release
     tags:
       - '*'
 
-defaults:
-  run:
-    working-directory: 'goffinet.ludus_zabbix_server'
-
 jobs:
 
   release:

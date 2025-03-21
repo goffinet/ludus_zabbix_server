@@ -13,7 +13,7 @@ name: Release
 
 defaults:
   run:
-    working-directory: 'ludus_ansible_role'
+    working-directory: 'ludus_zabbix_server'
 
 jobs:
 

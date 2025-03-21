@@ -1,0 +1,8 @@
+---
+# MySQL settings
+ludus_mysql_root_password: "secure_root_password"
+ludus_mysql_zabbix_database: "zabbix"
+ludus_mysql_zabbix_user: "zabbix"
+ludus_mysql_zabbix_password: "secure_zabbix_password"
+ludus_mariadb_version: "10.11"
+ludus_zabbix_version: "7.0"

@@ -1,0 +1,164 @@
+---
+- name: Install Debian 12 Requirements
+  ansible.legacy.apt:
+    name:
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python3-mysqldb
+    state: present
+    update_cache: true
+  become: true
+
+- name: Download MariaDB repo setup script
+  ansible.legacy.get_url:
+    url: "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
+    dest: /tmp/mariadb_repo_setup
+    mode: "0755"
+
+- name: Run the MariaDB repo setup script for MariaDB
+  ansible.legacy.command: "/tmp/mariadb_repo_setup --mariadb-server-version={{ ludus_mariadb_version}}"
+  args:
+    chdir: /tmp
+  register: repo_setup
+  changed_when: "'Repository configuration complete' in repo_setup.stdout"
+  become: true
+
+- name: Update apt cache
+  ansible.legacy.apt:
+    update_cache: true
+  become: true
+
+- name: Install MariaDB packages
+  ansible.legacy.apt:
+    name:
+      - mariadb-common
+      - mariadb-server
+      - mariadb-client
+    state: present
+  become: true
+
+- name: Download the Zabbix release package
+  ansible.legacy.get_url:
+    url: "{{ ludus_zabbix_repo_debian | regex_replace(' ') }}"
+    dest: "/tmp/zabbix-release.deb"
+    mode: "0644"
+
+- name: Install the Zabbix repository package
+  ansible.legacy.apt:
+    deb: "/tmp/zabbix-release.deb"
+    state: present
+    update_cache: true
+  become: true
+
+- name: Install Zabbix server and agent packages
+  ansible.legacy.apt:
+    name:
+      - zabbix-server-mysql
+      - zabbix-frontend-php
+      - zabbix-apache-conf
+      - zabbix-sql-scripts
+      - zabbix-agent
+    state: present
+    update_cache: true
+  become: true
+
+- name: Ensure Mariadb is running and enabled
+  ansible.legacy.service:
+    name: mysql
+    state: started
+    enabled: true
+  become: true
+
+- name: Set MySQL root password and ensure proper privileges (Debian/Ubuntu may require extra configuration)
+  community.mysql.mysql_user:
+    login_user: root
+    login_host: localhost
+   # login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: root
+    host_all: true
+    password: "{{ ludus_mysql_root_password }}"
+    priv: "*.*:ALL,GRANT"
+    state: present
+  become: true
+
+- name: Create `/root/.my.cnf` with root password credentials
+  ansible.legacy.template:
+    src:  my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    mode: 0600
+  become: true
+
+- name: Restart Mariadb service
+  ansible.legacy.service:
+    name: mariadb
+    state: restarted
+    enabled: true
+  become: true
+
+- name: Create Zabbix database
+  community.mysql.mysql_db:
+    name: "{{ ludus_mysql_zabbix_database }}"
+    encoding: "utf8mb4"
+    collation: "utf8mb4_bin"
+    login_user: root
+    login_password: "{{ ludus_mysql_root_password }}"
+    state: present
+  become: true
+
+- name: Create Zabbix database user
+  community.mysql.mysql_user:
+    login_user: root
+    login_password: "{{ ludus_mysql_root_password }}"
+    name: "{{ ludus_mysql_zabbix_user }}"
+    password: "{{ ludus_mysql_zabbix_password }}"
+    priv: "{{ ludus_mysql_zabbix_database }}.*:ALL"
+    state: present
+  become: true
+
+- name: Import initial schema and data for Zabbix server
+  ansible.legacy.shell: >-
+    zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz |
+    mysql -u{{ ludus_mysql_zabbix_user }} -p'{{ ludus_mysql_zabbix_password }}'
+    {{ ludus_mysql_zabbix_database }}
+  args:
+    creates: "/var/lib/zabbix_mysql_imported"
+  become: true
+
+- name: Create flag file after DB import
+  ansible.legacy.file:
+    path: "/var/lib/zabbix_mysql_imported"
+    state: touch
+  become: true
+
+- name: Configure Zabbix server to use the correct database credentials
+  ansible.legacy.lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: '^(DBPassword=).*$'
+    line: "DBPassword={{ ludus_mysql_zabbix_password }}"
+    state: present
+  become: true
+
+- name: Configure Zabbix PHP configuration
+  ansible.legacy.template:
+    src:  zabbix.conf.php.j2
+    dest: /etc/zabbix/web/zabbix.conf.php
+    owner: www-data
+    group: www-data
+    mode: 0600
+  become: true
+
+- name: Restart Zabbix server service
+  ansible.legacy.service:
+    name: zabbix-server
+    state: restarted
+    enabled: true
+  become: true
+
+- name: Restart Zabbix frontend service
+  ansible.legacy.service:
+    name: apache2
+    state: restarted
+    enabled: true
+  become: true

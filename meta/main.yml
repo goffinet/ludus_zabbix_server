@@ -1,0 +1,17 @@
+---
+dependencies: []
+
+galaxy_info:
+  role_name: ludus_zabbix_server
+  author: goffinet
+  description: An Ansible Role that installs Zabbix Server on Debian 12 (Bookworm)
+  license: GPLv3
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+  galaxy_tags:
+    - ludus
+
+collections: []

@@ -1,0 +1,4 @@
+ludus_zabbix_repo_debian: >-
+  https://repo.zabbix.com/zabbix/{{ ludus_zabbix_version }}/{{ ansible_distribution | lower }}/
+  pool/main/z/zabbix-release/zabbix-release_latest_{{ ludus_zabbix_version }}+{{ ansible_distribution | lower }}
+  {{ ansible_distribution_major_version }}_all.deb

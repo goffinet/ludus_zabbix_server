@@ -1,6 +1,8 @@
 # Ansible Role: {{ Thing }} ([Ludus](https://ludus.cloud))
 
-An Ansible Role that installs [Zabbix Server, Database and Frontend](https://www.zabbix.com/download?zabbix=7.0&os_distribution=debian&os_version=12&components=server_frontend_agent&db=mysql&ws=apache) on Debian 12.
+An Ansible Role that installs [Zabbix Server, Database and Frontend](https://www.zabbix.com/download?zabbix=7.0&os_distribution=debian&os_version=12&components=server_frontend_agent&db=mysql&ws=apache) on Debian 12 for [ludus.cloud](https://ludus.cloud).
+
+Pull requests are welcome.
 
 > [!WARNING]
 > This role supports only Debian 12 (Bookworm).

@@ -1,5 +1,5 @@
 ---
-- name: Install Debian 12 Requirements
+- name: Install Debian Requirements
   ansible.legacy.apt:
     name:
       - ca-certificates
@@ -70,7 +70,7 @@
     enabled: true
   become: true
 
-- name: Set MySQL root password and ensure proper privileges (Debian/Ubuntu may require extra configuration)
+- name: Set MySQL root password and ensure proper privileges (Debian)
   community.mysql.mysql_user:
     login_user: root
     login_host: localhost
